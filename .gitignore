@@ -1,0 +1,22 @@
+# Dependencies
+frontend/node_modules/
+
+# Next.js
+frontend/.next/
+frontend/out/
+frontend/build/
+
+# Environment
+frontend/.env*
+!.env.example
+
+# Debug / OS
+*.log
+.DS_Store
+
+# TypeScript
+frontend/*.tsbuildinfo
+frontend/next-env.d.ts
+
+# Vercel
+frontend/.vercel

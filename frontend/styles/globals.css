@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* QBS Co brand — light theme */
+  --background: 210 20% 98%; /* #F9FAFB */
+  --foreground: 221 39% 11%; /* #101828 */
+  --card: 0 0% 100%;
+  --card-foreground: 221 39% 11%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 221 39% 11%;
+  --primary: 216 89% 39%; /* #0B4DBB */
+  --primary-foreground: 0 0% 100%;
+  --secondary: 228 33% 95%; /* #EBEDF7 */
+  --secondary-foreground: 221 39% 11%;
+  --muted: 228 33% 95%;
+  --muted-foreground: 215 16% 47%;
+  --accent: 228 33% 95%;
+  --accent-foreground: 221 39% 11%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 228 20% 90%;
+  --input: 228 20% 90%;
+  --ring: 216 89% 39%;
+  --radius: 0.75rem;
+  --brand-green: 130 89% 42%; /* QBS accent green from logo */
+}
+
+.dark {
+  --background: 221 39% 8%;
+  --foreground: 210 20% 98%;
+  --card: 221 35% 11%;
+  --card-foreground: 210 20% 98%;
+  --popover: 221 35% 11%;
+  --popover-foreground: 210 20% 98%;
+  --primary: 216 89% 52%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 221 30% 16%;
+  --secondary-foreground: 210 20% 98%;
+  --muted: 221 30% 16%;
+  --muted-foreground: 215 16% 65%;
+  --accent: 221 30% 16%;
+  --accent-foreground: 210 20% 98%;
+  --destructive: 0 62% 45%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 221 25% 18%;
+  --input: 221 25% 18%;
+  --ring: 216 89% 52%;
+}
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: var(--font-sans);
+}

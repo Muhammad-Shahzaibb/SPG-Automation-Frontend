@@ -1,8 +1,9 @@
 "use client";
 
 import { useTheme } from "next-themes";
-import { Moon, Sun } from "lucide-react";
+import { Moon, Sun, PanelLeft } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useSidebarState } from "@/hooks/use-sidebar";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { UserAvatar } from "@/components/common/user-avatar";
 import { Button } from "@/components/ui/button";
@@ -23,12 +24,26 @@ interface NavbarProps {
 export function Navbar({ title }: NavbarProps) {
   const { user, logout } = useAuth();
   const { theme, setTheme } = useTheme();
+  const { open, toggle } = useSidebarState();
 
   return (
     <header className="sticky top-0 z-40 flex h-16 items-center justify-between gap-4 border-b bg-background/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="min-w-0 flex-1">
-        <h1 className="truncate text-lg font-semibold">{title}</h1>
-        <Breadcrumbs className="mt-0.5 hidden sm:flex" />
+      <div className="flex min-w-0 flex-1 items-center gap-3">
+        {!open && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggle}
+            aria-label="Open sidebar"
+            className="shrink-0"
+          >
+            <PanelLeft className="h-5 w-5" />
+          </Button>
+        )}
+        <div className="min-w-0">
+          <h1 className="truncate text-lg font-semibold">{title}</h1>
+          <Breadcrumbs className="mt-0.5 hidden sm:flex" />
+        </div>
       </div>
 
       <div className="flex items-center gap-2">

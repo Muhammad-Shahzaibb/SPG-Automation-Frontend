@@ -1,6 +1,6 @@
 # Spg-Frontend
 
-Binaof Extractor frontend for the Paper Spec Extractor FastAPI backend.
+**MuntQ Parsing Engine** frontend for the Paper Spec Extractor FastAPI backend.
 
 ```bash
 cd frontend

@@ -18,7 +18,7 @@ export default function RootLayout({
       <head>
         <title>{`${APP_NAME} | ${COMPANY_NAME}`}</title>
         <meta name="description" content={`${COMPANY_TAGLINE} — ${COMPANY_NAME}`} />
-        <link rel="icon" href="/qbs_logo.svg" type="image/svg+xml" />
+        <link rel="icon" href="/muntq-logo-black.svg" type="image/svg+xml" />
       </head>
       <body className="min-h-screen antialiased">
         <ThemeProvider

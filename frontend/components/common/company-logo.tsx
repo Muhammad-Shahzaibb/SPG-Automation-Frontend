@@ -1,12 +1,17 @@
+"use client";
+
 import Image from "next/image";
+import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
-import { APP_NAME, COMPANY_NAME } from "@/lib/constants";
+import { APP_NAME } from "@/lib/constants";
 
 interface CompanyLogoProps {
   variant?: "full" | "mark";
   className?: string;
   showAppName?: boolean;
   centered?: boolean;
+  size?: "sm" | "md";
 }
 
 export function CompanyLogo({
@@ -14,15 +19,31 @@ export function CompanyLogo({
   className,
   showAppName = true,
   centered = false,
+  size = "md",
 }: CompanyLogoProps) {
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Light theme → black logo; dark theme → white logo
+  const src =
+    mounted && resolvedTheme === "dark"
+      ? "/muntq-logo-white.svg"
+      : "/muntq-logo-black.svg";
+
+  const logoHeight = size === "sm" ? "h-6" : "h-10";
+
   if (variant === "mark") {
     return (
       <Image
-        src="/qbs_logo.svg"
-        alt={COMPANY_NAME}
+        src={src}
+        alt={APP_NAME}
         width={40}
-        height={13}
-        className={cn("h-8 w-auto object-contain object-left", className)}
+        height={40}
+        className={cn("h-7 w-auto object-contain object-left", className)}
         priority
       />
     );
@@ -31,24 +52,33 @@ export function CompanyLogo({
   return (
     <div
       className={cn(
-        "flex flex-col gap-1",
+        "flex flex-col",
+        size === "sm" ? "gap-0.5" : "gap-1",
         centered && "items-center",
         className
       )}
     >
       <Image
-        src="/qbs_logo.svg"
-        alt={COMPANY_NAME}
-        width={160}
-        height={52}
+        src={src}
+        alt={APP_NAME}
+        width={180}
+        height={48}
         className={cn(
-          "h-10 w-auto object-contain",
+          "w-auto object-contain",
+          logoHeight,
           centered ? "object-center" : "object-left"
         )}
         priority
       />
       {showAppName && (
-        <p className="text-xs font-medium text-muted-foreground">{APP_NAME}</p>
+        <p
+          className={cn(
+            "font-medium text-muted-foreground",
+            size === "sm" ? "text-[10px] leading-tight" : "text-xs"
+          )}
+        >
+          {APP_NAME}
+        </p>
       )}
     </div>
   );

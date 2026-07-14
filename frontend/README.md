@@ -1,6 +1,6 @@
-# Binaof Extractor — Frontend
+# MuntQ Parsing Engine — Frontend
 
-Next.js 15 frontend for the **Paper Specification Extractor** API (FastAPI).
+Next.js 15 frontend for the **MuntQ Parsing Engine** (Paper Specification Extractor API).
 
 ## Setup
 

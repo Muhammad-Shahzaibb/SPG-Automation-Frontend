@@ -1,4 +1,4 @@
-export const APP_NAME = "Binaof Extractor";
+export const APP_NAME = "MuntQ Parsing Engine";
 export const COMPANY_NAME = "QBS Co Pvt Ltd";
 export const COMPANY_TAGLINE = "Paper Specification Extractor";
 
@@ -6,11 +6,11 @@ export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
 
 export const STORAGE_KEYS = {
-  ACCESS_TOKEN: "binaof_access_token",
-  REFRESH_TOKEN: "binaof_refresh_token",
-  USER: "binaof_user",
-  THEME: "binaof_theme",
-  SIDEBAR_COLLAPSED: "binaof_sidebar_collapsed",
+  ACCESS_TOKEN: "muntq_access_token",
+  REFRESH_TOKEN: "muntq_refresh_token",
+  USER: "muntq_user",
+  THEME: "muntq_theme",
+  SIDEBAR_COLLAPSED: "muntq_sidebar_collapsed",
 } as const;
 
 export const NAV_ITEMS: {

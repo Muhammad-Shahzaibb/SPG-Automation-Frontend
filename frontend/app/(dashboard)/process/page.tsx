@@ -1,14 +1,16 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import axios from "axios";
 import { Download, FileText, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { extractService } from "@/services";
 import { extractErrorMessage } from "@/services/api-client";
-import type { ParseResponse } from "@/types";
+import type { ParseResponse, PreviewResponse } from "@/types";
 import { PageHeader } from "@/components/layout/page-header";
 import { UploadArea } from "@/components/upload/upload-area";
+import { PreviewTable } from "@/components/upload/preview-table";
 import { SearchBar } from "@/components/common/search-bar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,27 +19,72 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
+function isRunExpiredError(error: unknown): boolean {
+  if (axios.isAxiosError(error)) {
+    return error.response?.status === 404;
+  }
+  const message = extractErrorMessage(error).toLowerCase();
+  return message.includes("not found") || message.includes("expired");
+}
+
 export default function ProcessPage() {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [parseResult, setParseResult] = useState<ParseResponse | null>(null);
   const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
+  const [debouncedColumns, setDebouncedColumns] = useState<string[]>([]);
   const [columnSearch, setColumnSearch] = useState("");
   const [filename, setFilename] = useState("Specifications_Combined");
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedColumns(selectedColumns);
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [selectedColumns]);
+
+  const resetForExpiredRun = (message?: string) => {
+    setParseResult(null);
+    setSelectedColumns([]);
+    setDebouncedColumns([]);
+    toast.error(
+      message || "Run expired or not found. Please upload and parse again."
+    );
+  };
 
   const parseMutation = useMutation({
     mutationFn: extractService.parse,
     onSuccess: (data) => {
       setParseResult(data);
       setSelectedColumns(data.columns);
-      toast.success(
-        `Parsed ${data.files_ok} of ${data.files_total} file(s)`
-      );
+      setDebouncedColumns(data.columns);
+      toast.success(`Parsed ${data.files_ok} of ${data.files_total} file(s)`);
       if (data.errors.length > 0) {
         toast.warning(`${data.errors.length} file(s) failed to parse`);
       }
     },
     onError: (error) => toast.error(extractErrorMessage(error)),
   });
+
+  const previewQuery = useQuery<PreviewResponse>({
+    queryKey: ["extract-preview", parseResult?.run_id, debouncedColumns],
+    queryFn: () =>
+      extractService.preview({
+        run_id: parseResult!.run_id,
+        selected_columns: debouncedColumns,
+      }),
+    enabled: !!parseResult?.run_id && debouncedColumns.length > 0,
+    retry: false,
+  });
+
+  useEffect(() => {
+    if (!previewQuery.error) return;
+    if (isRunExpiredError(previewQuery.error)) {
+      resetForExpiredRun(extractErrorMessage(previewQuery.error));
+      return;
+    }
+    toast.error(extractErrorMessage(previewQuery.error));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- toast only when error identity updates
+  }, [previewQuery.errorUpdatedAt]);
 
   const excelMutation = useMutation({
     mutationFn: extractService.downloadExcel,
@@ -46,8 +93,17 @@ export default function ProcessPage() {
       setParseResult(null);
       setSelectedFiles([]);
       setSelectedColumns([]);
+      setDebouncedColumns([]);
+      setColumnSearch("");
+      setFilename("Specifications_Combined");
     },
-    onError: (error) => toast.error(extractErrorMessage(error)),
+    onError: (error) => {
+      if (isRunExpiredError(error)) {
+        resetForExpiredRun(extractErrorMessage(error));
+        return;
+      }
+      toast.error(extractErrorMessage(error));
+    },
   });
 
   const filteredColumns = useMemo(() => {
@@ -89,6 +145,7 @@ export default function ProcessPage() {
     setSelectedFiles([]);
     setParseResult(null);
     setSelectedColumns([]);
+    setDebouncedColumns([]);
     setColumnSearch("");
     setFilename("Specifications_Combined");
   };
@@ -97,7 +154,7 @@ export default function ProcessPage() {
     <div className="space-y-6">
       <PageHeader
         title="Extract Documents"
-        description="Upload .docx specification files, select physical parameters, and download Excel."
+        description="Upload .docx files, preview selected columns, then download Excel."
       />
 
       <Card className="shadow-sm">
@@ -174,7 +231,7 @@ export default function ProcessPage() {
             </Card>
           )}
 
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
             <Card className="shadow-sm">
               <CardHeader>
                 <CardTitle className="text-base">Select columns</CardTitle>
@@ -198,10 +255,10 @@ export default function ProcessPage() {
                     size="sm"
                     onClick={() => setSelectedColumns([])}
                   >
-                    Unselect All
+                    Clear
                   </Button>
                 </div>
-                <ScrollArea className="h-[280px] rounded-lg border p-3">
+                <ScrollArea className="h-[320px] rounded-lg border p-3">
                   <div className="space-y-2">
                     {filteredColumns.map((col) => (
                       <label
@@ -225,7 +282,7 @@ export default function ProcessPage() {
 
             <Card className="shadow-sm">
               <CardHeader>
-                <CardTitle className="text-base">Generate Excel</CardTitle>
+                <CardTitle className="text-base">Download Excel</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
@@ -236,36 +293,21 @@ export default function ProcessPage() {
                     onChange={(e) => setFilename(e.target.value)}
                     placeholder="Specifications_Combined"
                   />
-                  <p className="text-xs text-muted-foreground">
-                    .xlsx is appended automatically if missing
+                </div>
+                <div className="rounded-lg border bg-muted/30 p-3 text-sm">
+                  <p className="text-muted-foreground">
+                    Run ID:{" "}
+                    <span className="font-mono text-xs text-foreground">
+                      {parseResult.run_id}
+                    </span>
+                  </p>
+                  <p className="mt-1 text-muted-foreground">
+                    Preview rows:{" "}
+                    <span className="text-foreground">
+                      {previewQuery.data?.total_rows ?? "—"}
+                    </span>
                   </p>
                 </div>
-
-                <div className="rounded-lg border bg-muted/30 p-4 text-sm space-y-1">
-                  <p>
-                    <span className="text-muted-foreground">Run ID: </span>
-                    <span className="font-mono text-xs">{parseResult.run_id}</span>
-                  </p>
-                  <p>
-                    <span className="text-muted-foreground">Records: </span>
-                    {parseResult.records.length}
-                  </p>
-                </div>
-
-                {parseResult.records.length > 0 && (
-                  <ScrollArea className="h-[160px] rounded-lg border p-3">
-                    <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">
-                      Parsed files
-                    </p>
-                    {parseResult.records.map((rec, i) => (
-                      <p key={i} className="text-sm py-0.5">
-                        {rec.file}
-                        {rec.SpecNo ? ` — ${rec.SpecNo}` : ""}
-                      </p>
-                    ))}
-                  </ScrollArea>
-                )}
-
                 <div className="flex flex-wrap gap-2">
                   <Button
                     onClick={handleDownload}
@@ -286,6 +328,22 @@ export default function ProcessPage() {
               </CardContent>
             </Card>
           </div>
+
+          <Card className="shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-base">Live preview</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <PreviewTable
+                rows={previewQuery.data?.rows ?? []}
+                selectedColumns={debouncedColumns}
+                isLoading={
+                  debouncedColumns.length > 0 &&
+                  (previewQuery.isLoading || previewQuery.isFetching)
+                }
+              />
+            </CardContent>
+          </Card>
         </>
       )}
     </div>

@@ -95,6 +95,18 @@ export interface ExcelRequest {
   filename?: string;
 }
 
+export interface PreviewRequest {
+  run_id: string;
+  selected_columns: string[];
+}
+
+export interface PreviewResponse {
+  run_id: string;
+  selected_columns: string[];
+  total_rows: number;
+  rows: ParseRecord[];
+}
+
 export interface UserDashboardStats {
   total_runs: number;
   files_processed: number;

@@ -23,6 +23,7 @@ interface PreviewTableProps {
   rows: ParseRecord[];
   selectedColumns: string[];
   isLoading?: boolean;
+  removing?: boolean;
   className?: string;
   onRemoveRow?: (row: ParseRecord) => void;
 }
@@ -36,6 +37,7 @@ export function PreviewTable({
   rows,
   selectedColumns,
   isLoading,
+  removing,
   className,
   onRemoveRow,
 }: PreviewTableProps) {
@@ -109,60 +111,63 @@ export function PreviewTable({
             </tr>
           </thead>
           <tbody>
-            {rows.map((row, rowIndex) => (
-              <tr
-                key={`${row.file}-${rowIndex}`}
-                className="border-b last:border-0 hover:bg-muted/40"
-              >
-                {IDENTITY_COLUMNS.map((col) => (
-                  <td
-                    key={`${rowIndex}-${col.key}`}
-                    className="max-w-[160px] truncate whitespace-nowrap px-3 py-2"
-                    title={cell(row[col.key])}
-                  >
-                    {cell(row[col.key])}
+            {rows.map((row, rowIndex) => {
+              const rowKey = row.row_id ?? `${row.file}-${rowIndex}`;
+              return (
+                <tr
+                  key={rowKey}
+                  className="border-b last:border-0 hover:bg-muted/40"
+                >
+                  {IDENTITY_COLUMNS.map((col) => (
+                    <td
+                      key={`${rowKey}-${col.key}`}
+                      className="max-w-[160px] truncate whitespace-nowrap px-3 py-2"
+                      title={cell(row[col.key])}
+                    >
+                      {cell(row[col.key])}
+                    </td>
+                  ))}
+                  {selectedColumns.map((col) => {
+                    const param = row.params?.[col];
+                    return (
+                      <Fragment key={`${rowKey}-${col}`}>
+                        <td
+                          className="border-l px-2 py-2 text-center tabular-nums"
+                          title={param?.Unit ? `Unit: ${param.Unit}` : undefined}
+                        >
+                          {cell(param?.Min)}
+                        </td>
+                        <td
+                          className="px-2 py-2 text-center tabular-nums"
+                          title={param?.Unit ? `Unit: ${param.Unit}` : undefined}
+                        >
+                          {cell(param?.Tar)}
+                        </td>
+                        <td
+                          className="px-2 py-2 text-center tabular-nums"
+                          title={param?.Unit ? `Unit: ${param.Unit}` : undefined}
+                        >
+                          {cell(param?.Max)}
+                        </td>
+                      </Fragment>
+                    );
+                  })}
+                  <td className="px-3 py-2 text-right">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onRemoveRow?.(row)}
+                      disabled={!onRemoveRow || removing || !row.row_id}
+                      aria-label={`Remove ${row.file}`}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Remove
+                    </Button>
                   </td>
-                ))}
-                {selectedColumns.map((col) => {
-                  const param = row.params?.[col];
-                  return (
-                    <Fragment key={`${rowIndex}-${col}`}>
-                      <td
-                        className="border-l px-2 py-2 text-center tabular-nums"
-                        title={param?.Unit ? `Unit: ${param.Unit}` : undefined}
-                      >
-                        {cell(param?.Min)}
-                      </td>
-                      <td
-                        className="px-2 py-2 text-center tabular-nums"
-                        title={param?.Unit ? `Unit: ${param.Unit}` : undefined}
-                      >
-                        {cell(param?.Tar)}
-                      </td>
-                      <td
-                        className="px-2 py-2 text-center tabular-nums"
-                        title={param?.Unit ? `Unit: ${param.Unit}` : undefined}
-                      >
-                        {cell(param?.Max)}
-                      </td>
-                    </Fragment>
-                  );
-                })}
-                <td className="px-3 py-2 text-right">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onRemoveRow?.(row)}
-                    disabled={!onRemoveRow}
-                    aria-label={`Remove ${row.file}`}
-                    className="text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Remove
-                  </Button>
-                </td>
-              </tr>
-            ))}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

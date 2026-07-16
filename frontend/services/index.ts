@@ -7,6 +7,8 @@ import type {
   ParseResponse,
   PreviewRequest,
   PreviewResponse,
+  RemoveRowsRequest,
+  RemoveRowsResponse,
   ResetPasswordRequest,
   TokenResponse,
   UpdateUserRequest,
@@ -56,6 +58,11 @@ export const extractService = {
   preview: (data: PreviewRequest) =>
     apiClient
       .post<PreviewResponse>("/extract/preview", data)
+      .then((r) => r.data),
+
+  removeRows: (data: RemoveRowsRequest) =>
+    apiClient
+      .post<RemoveRowsResponse>("/extract/rows/remove", data)
       .then((r) => r.data),
 
   downloadExcel: async (data: ExcelRequest) => {

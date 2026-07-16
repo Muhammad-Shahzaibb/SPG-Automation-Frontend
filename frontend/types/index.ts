@@ -62,6 +62,7 @@ export interface ParamValues {
 }
 
 export interface ParseRecord {
+  row_id?: string;
   file: string;
   SpecNo?: string;
   Client?: string;
@@ -105,6 +106,18 @@ export interface PreviewResponse {
   selected_columns: string[];
   total_rows: number;
   rows: ParseRecord[];
+}
+
+export interface RemoveRowsRequest {
+  run_id: string;
+  row_ids: string[];
+}
+
+export interface RemoveRowsResponse {
+  run_id: string;
+  removed_count: number;
+  remaining_rows: number;
+  columns?: string[];
 }
 
 export interface UserDashboardStats {

@@ -1,9 +1,11 @@
-"use client";
+﻿"use client";
 
 import { Fragment } from "react";
+import { Trash2 } from "lucide-react";
 import type { ParseRecord } from "@/types";
 import { TableSkeleton } from "@/components/common/loading-skeleton";
 import { EmptyState } from "@/components/common/empty-state";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const IDENTITY_COLUMNS: { key: keyof ParseRecord | "file"; label: string }[] = [
@@ -22,10 +24,11 @@ interface PreviewTableProps {
   selectedColumns: string[];
   isLoading?: boolean;
   className?: string;
+  onRemoveRow?: (row: ParseRecord) => void;
 }
 
 function cell(value: unknown): string {
-  if (value === null || value === undefined || value === "") return "—";
+  if (value === null || value === undefined || value === "") return "-";
   return String(value);
 }
 
@@ -34,6 +37,7 @@ export function PreviewTable({
   selectedColumns,
   isLoading,
   className,
+  onRemoveRow,
 }: PreviewTableProps) {
   if (isLoading) {
     return <TableSkeleton rows={4} cols={6} />;
@@ -80,6 +84,9 @@ export function PreviewTable({
                   {col}
                 </th>
               ))}
+              <th className="h-10 whitespace-nowrap px-3 text-right font-medium text-muted-foreground">
+                Actions
+              </th>
             </tr>
             <tr className="border-b bg-muted/30">
               {IDENTITY_COLUMNS.map((col) => (
@@ -98,6 +105,7 @@ export function PreviewTable({
                   </th>
                 </Fragment>
               ))}
+              <th className="h-8 px-3" />
             </tr>
           </thead>
           <tbody>
@@ -140,6 +148,19 @@ export function PreviewTable({
                     </Fragment>
                   );
                 })}
+                <td className="px-3 py-2 text-right">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onRemoveRow?.(row)}
+                    disabled={!onRemoveRow}
+                    aria-label={`Remove ${row.file}`}
+                    className="text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Remove
+                  </Button>
+                </td>
               </tr>
             ))}
           </tbody>

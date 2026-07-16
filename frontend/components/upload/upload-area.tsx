@@ -8,7 +8,8 @@ import { formatBytes } from "@/utils/format";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
-const ACCEPTED_EXT = /\.docx$/i;
+// const ACCEPTED_EXT = /\.docx$/i;
+const ACCEPTED_EXT = /\.(docx|pdf)$/i;
 const MAX_FILE_SIZE = 25 * 1024 * 1024;
 
 interface UploadAreaProps {
@@ -31,7 +32,8 @@ export function UploadArea({
       const next: File[] = [...files];
       Array.from(fileList).forEach((file) => {
         if (!ACCEPTED_EXT.test(file.name)) {
-          toast.error(`${file.name}: only .docx files are allowed`);
+          // toast.error(`${file.name}: only .docx files are allowed`);
+          toast.error(`${file.name}: only .docx and .pdf files are allowed`);
           return;
         }
         if (file.size > MAX_FILE_SIZE) {
@@ -81,7 +83,7 @@ export function UploadArea({
           <div className="mb-4 rounded-full bg-primary/10 p-4">
             <Upload className="h-8 w-8 text-primary" />
           </div>
-          <h3 className="text-lg font-semibold">Drag and drop .docx files</h3>
+          <h3 className="text-lg font-semibold">Drag and drop .docx or .pdf files</h3>
           <p className="mt-1 text-sm text-muted-foreground">
             or browse. Max 25 MB per file.
           </p>
@@ -89,7 +91,8 @@ export function UploadArea({
             <input
               type="file"
               multiple
-              accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              // accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              accept=".docx,.pdf,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
               className="hidden"
               disabled={disabled}
               onChange={(e) => e.target.files && processFiles(e.target.files)}
@@ -151,7 +154,7 @@ export function UploadArea({
       {files.length === 0 && (
         <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <AlertCircle className="h-3.5 w-3.5" />
-          Only Microsoft Word (.docx) files are accepted.
+          Only Microsoft Word (.docx) and PDF files are accepted.
         </p>
       )}
     </div>

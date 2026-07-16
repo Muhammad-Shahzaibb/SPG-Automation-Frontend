@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -7,7 +7,8 @@ import { Download, FileText, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { extractService } from "@/services";
 import { extractErrorMessage } from "@/services/api-client";
-import type { ParseResponse, PreviewResponse } from "@/types";
+import type { ParseRecord, ParseResponse, PreviewResponse } from "@/types";
+import { exportPreviewRowsToExcel } from "@/utils/excel";
 import { PageHeader } from "@/components/layout/page-header";
 import { UploadArea } from "@/components/upload/upload-area";
 import { PreviewTable } from "@/components/upload/preview-table";
@@ -34,6 +35,7 @@ export default function ProcessPage() {
   const [debouncedColumns, setDebouncedColumns] = useState<string[]>([]);
   const [columnSearch, setColumnSearch] = useState("");
   const [filename, setFilename] = useState("Specifications_Combined");
+  const [removedFiles, setRemovedFiles] = useState<string[]>([]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -46,6 +48,7 @@ export default function ProcessPage() {
     setParseResult(null);
     setSelectedColumns([]);
     setDebouncedColumns([]);
+    setRemovedFiles([]);
     toast.error(
       message || "Run expired or not found. Please upload and parse again."
     );
@@ -57,6 +60,7 @@ export default function ProcessPage() {
       setParseResult(data);
       setSelectedColumns(data.columns);
       setDebouncedColumns(data.columns);
+      setRemovedFiles([]);
       toast.success(`Parsed ${data.files_ok} of ${data.files_total} file(s)`);
       if (data.errors.length > 0) {
         toast.warning(`${data.errors.length} file(s) failed to parse`);
@@ -86,25 +90,10 @@ export default function ProcessPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- toast only when error identity updates
   }, [previewQuery.errorUpdatedAt]);
 
-  const excelMutation = useMutation({
-    mutationFn: extractService.downloadExcel,
-    onSuccess: () => {
-      toast.success("Excel downloaded");
-      setParseResult(null);
-      setSelectedFiles([]);
-      setSelectedColumns([]);
-      setDebouncedColumns([]);
-      setColumnSearch("");
-      setFilename("Specifications_Combined");
-    },
-    onError: (error) => {
-      if (isRunExpiredError(error)) {
-        resetForExpiredRun(extractErrorMessage(error));
-        return;
-      }
-      toast.error(extractErrorMessage(error));
-    },
-  });
+  const visiblePreviewRows = useMemo(() => {
+    const rows = previewQuery.data?.rows ?? [];
+    return rows.filter((row) => !removedFiles.includes(row.file));
+  }, [previewQuery.data?.rows, removedFiles]);
 
   const filteredColumns = useMemo(() => {
     if (!parseResult) return [];
@@ -128,17 +117,42 @@ export default function ProcessPage() {
     parseMutation.mutate(selectedFiles);
   };
 
+  const handleRemoveRow = (row: ParseRecord) => {
+    setRemovedFiles((prev) => {
+      if (prev.includes(row.file)) return prev;
+      return [...prev, row.file];
+    });
+    toast.success(`${row.file} removed from preview and export`);
+  };
+
   const handleDownload = () => {
     if (!parseResult) return;
     if (selectedColumns.length === 0) {
       toast.error("Select at least one column");
       return;
     }
-    excelMutation.mutate({
-      run_id: parseResult.run_id,
-      selected_columns: selectedColumns,
-      filename: filename || undefined,
-    });
+    if (visiblePreviewRows.length === 0) {
+      toast.error("No preview rows left to export");
+      return;
+    }
+
+    try {
+      exportPreviewRowsToExcel({
+        rows: visiblePreviewRows,
+        selectedColumns,
+        filename: filename || undefined,
+      });
+      toast.success("Excel downloaded with current preview rows");
+      setParseResult(null);
+      setSelectedFiles([]);
+      setSelectedColumns([]);
+      setDebouncedColumns([]);
+      setColumnSearch("");
+      setFilename("Specifications_Combined");
+      setRemovedFiles([]);
+    } catch (error) {
+      toast.error(extractErrorMessage(error));
+    }
   };
 
   const reset = () => {
@@ -148,13 +162,14 @@ export default function ProcessPage() {
     setDebouncedColumns([]);
     setColumnSearch("");
     setFilename("Specifications_Combined");
+    setRemovedFiles([]);
   };
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Extract Documents"
-        description="Upload .docx files, preview selected columns, then download Excel."
+        description="Upload .docx files, preview selected columns, remove unwanted rows, then download Excel."
       />
 
       <Card className="shadow-sm">
@@ -296,29 +311,22 @@ export default function ProcessPage() {
                 </div>
                 <div className="rounded-lg border bg-muted/30 p-3 text-sm">
                   <p className="text-muted-foreground">
-                    Run ID:{" "}
-                    <span className="font-mono text-xs text-foreground">
-                      {parseResult.run_id}
-                    </span>
+                    Run ID: <span className="font-mono text-xs text-foreground">{parseResult.run_id}</span>
                   </p>
                   <p className="mt-1 text-muted-foreground">
-                    Preview rows:{" "}
-                    <span className="text-foreground">
-                      {previewQuery.data?.total_rows ?? "—"}
-                    </span>
+                    Preview rows: <span className="text-foreground">{visiblePreviewRows.length}</span>
+                  </p>
+                  <p className="mt-1 text-muted-foreground">
+                    Removed rows: <span className="text-foreground">{removedFiles.length}</span>
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <Button
                     onClick={handleDownload}
-                    disabled={
-                      selectedColumns.length === 0 || excelMutation.isPending
-                    }
+                    disabled={selectedColumns.length === 0 || visiblePreviewRows.length === 0}
                   >
                     <Download className="h-4 w-4" />
-                    {excelMutation.isPending
-                      ? "Generating..."
-                      : "Download Excel"}
+                    Download Excel
                   </Button>
                   <Button variant="outline" onClick={reset}>
                     <RotateCcw className="h-4 w-4" />
@@ -335,12 +343,13 @@ export default function ProcessPage() {
             </CardHeader>
             <CardContent>
               <PreviewTable
-                rows={previewQuery.data?.rows ?? []}
+                rows={visiblePreviewRows}
                 selectedColumns={debouncedColumns}
                 isLoading={
                   debouncedColumns.length > 0 &&
                   (previewQuery.isLoading || previewQuery.isFetching)
                 }
+                onRemoveRow={handleRemoveRow}
               />
             </CardContent>
           </Card>

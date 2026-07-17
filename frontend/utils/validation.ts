@@ -8,14 +8,14 @@ export const loginSchema = z.object({
 export const createUserSchema = z.object({
   email: z.string().email("Enter a valid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
-  full_name: z.string().optional(),
+  full_name: z.string().trim().min(1, "Full name is required"),
   role: z.enum(["admin", "user"]),
   is_active: z.boolean().optional(),
 });
 
 export const editUserSchema = z.object({
   email: z.string().email("Enter a valid email address"),
-  full_name: z.string().min(1, "Name is required"),
+  full_name: z.string().trim().min(1, "Full name is required"),
   role: z.enum(["admin", "user"]),
 });
 

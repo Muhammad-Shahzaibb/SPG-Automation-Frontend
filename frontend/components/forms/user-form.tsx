@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -23,6 +24,14 @@ import {
 } from "@/components/ui/select";
 import { Modal } from "@/components/common/modal";
 
+const CREATE_USER_DEFAULTS: CreateUserFormData = {
+  email: "",
+  password: "",
+  full_name: "",
+  role: "user",
+  is_active: true,
+};
+
 interface CreateUserFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -41,21 +50,35 @@ export function CreateUserForm({
     handleSubmit,
     setValue,
     reset,
+    watch,
     formState: { errors },
   } = useForm<CreateUserFormData>({
     resolver: zodResolver(createUserSchema),
-    defaultValues: { role: "user", full_name: "", is_active: true },
+    defaultValues: CREATE_USER_DEFAULTS,
   });
+
+  useEffect(() => {
+    if (!open) {
+      reset(CREATE_USER_DEFAULTS);
+    }
+  }, [open, reset]);
 
   const handleFormSubmit = (data: CreateUserFormData) => {
     onSubmit(data);
-    reset();
+    reset(CREATE_USER_DEFAULTS);
+  };
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      reset(CREATE_USER_DEFAULTS);
+    }
+    onOpenChange(nextOpen);
   };
 
   return (
     <Modal
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={handleOpenChange}
       title="Add User"
       description="Create a new user account"
     >
@@ -63,6 +86,9 @@ export function CreateUserForm({
         <div className="space-y-2">
           <Label htmlFor="full_name">Full Name</Label>
           <Input id="full_name" {...register("full_name")} />
+          {errors.full_name && (
+            <p className="text-sm text-destructive">{errors.full_name.message}</p>
+          )}
         </div>
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
@@ -74,7 +100,7 @@ export function CreateUserForm({
         <div className="space-y-2">
           <Label htmlFor="role">Role</Label>
           <Select
-            defaultValue="user"
+            value={watch("role")}
             onValueChange={(v) => setValue("role", v as "admin" | "user")}
           >
             <SelectTrigger>
@@ -94,7 +120,11 @@ export function CreateUserForm({
           )}
         </div>
         <div className="flex justify-end gap-2">
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => handleOpenChange(false)}
+          >
             Cancel
           </Button>
           <Button type="submit" disabled={isLoading}>

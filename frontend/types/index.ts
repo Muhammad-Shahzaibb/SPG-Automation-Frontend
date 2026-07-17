@@ -35,7 +35,7 @@ export interface LogoutRequest {
 export interface CreateUserRequest {
   email: string;
   password: string;
-  full_name?: string;
+  full_name: string;
   role?: UserRole;
   is_active?: boolean;
 }

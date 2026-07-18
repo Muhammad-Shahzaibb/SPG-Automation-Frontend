@@ -116,7 +116,9 @@ export interface RemoveRowsRequest {
 export interface RemoveRowsResponse {
   run_id: string;
   removed_count: number;
+  remaining_count: number;
   remaining_rows: number;
+  remaining_row_ids?: string[];
   columns?: string[];
 }
 

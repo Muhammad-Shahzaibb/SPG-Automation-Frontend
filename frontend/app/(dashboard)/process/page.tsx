@@ -96,7 +96,7 @@ export default function ProcessPage() {
   const removeRowsMutation = useMutation({
     mutationFn: extractService.removeRows,
     onSuccess: async (data) => {
-      const remaining = data.remaining_rows ?? (data as any).remaining_count ?? 0;
+      const remaining = data.remaining_count ?? data.remaining_rows ?? 0;
       setParseResult((prev) => {
         if (!prev) return null;
         return {

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -54,7 +54,7 @@ export default function ProcessPage() {
 
   const parseMutation = useMutation({
     mutationFn: extractService.parse,
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       setParseResult(data);
       setSelectedColumns(data.columns);
       setDebouncedColumns(data.columns);
@@ -62,6 +62,10 @@ export default function ProcessPage() {
       if (data.errors.length > 0) {
         toast.warning(`${data.errors.length} file(s) failed to parse`);
       }
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["dashboard-user"] }),
+        queryClient.invalidateQueries({ queryKey: ["dashboard-admin"] }),
+      ]);
     },
     onError: (error) => toast.error(extractErrorMessage(error)),
   });
@@ -92,10 +96,18 @@ export default function ProcessPage() {
   const removeRowsMutation = useMutation({
     mutationFn: extractService.removeRows,
     onSuccess: async (data) => {
+      const remaining = data.remaining_rows ?? (data as any).remaining_count ?? 0;
+      setParseResult((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          columns: data.columns ?? prev.columns,
+          files_ok: remaining,
+          files_total: remaining + prev.files_failed,
+        };
+      });
+
       if (data.columns) {
-        setParseResult((prev) =>
-          prev ? { ...prev, columns: data.columns! } : prev
-        );
         setSelectedColumns((prev) =>
           prev.filter((col) => data.columns!.includes(col))
         );
@@ -104,9 +116,13 @@ export default function ProcessPage() {
         );
       }
 
-      await queryClient.invalidateQueries({
-        queryKey: ["extract-preview", parseResult?.run_id],
-      });
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["extract-preview", parseResult?.run_id],
+        }),
+        queryClient.invalidateQueries({ queryKey: ["dashboard-user"] }),
+        queryClient.invalidateQueries({ queryKey: ["dashboard-admin"] }),
+      ]);
       toast.success(
         data.removed_count === 1
           ? "Row removed from preview"
@@ -124,7 +140,7 @@ export default function ProcessPage() {
 
   const excelMutation = useMutation({
     mutationFn: extractService.downloadExcel,
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("Excel downloaded");
       setParseResult(null);
       setSelectedFiles([]);
@@ -133,6 +149,10 @@ export default function ProcessPage() {
       setColumnSearch("");
       setFilename("Specifications_Combined");
       queryClient.removeQueries({ queryKey: ["extract-preview"] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["dashboard-user"] }),
+        queryClient.invalidateQueries({ queryKey: ["dashboard-admin"] }),
+      ]);
     },
     onError: (error) => {
       if (isRunExpiredError(error)) {

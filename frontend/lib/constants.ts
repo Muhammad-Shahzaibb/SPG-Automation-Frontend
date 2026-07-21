@@ -4,7 +4,7 @@ export const COMPANY_TAGLINE = "Paper Specification Extractor";
 
 // export const API_BASE_URL = "http://163.61.91.66:30527/api/v1";  // stage
 // export const API_BASE_URL = "http://localhost:8000/api/v1";  // local
-export const API_DOCS_URL = "http://172.160.0.14:8000/api/v1";   // production
+export const API_BASE_URL = "http://172.160.0.14:8000/api/v1";   // production
   // process.env.NEXT_PUBLIC_API_URL ?? "http://163.61.91.66:30527/api/v1";
 
 export const STORAGE_KEYS = {

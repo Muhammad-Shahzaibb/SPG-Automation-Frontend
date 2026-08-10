@@ -1,4 +1,5 @@
 import apiClient, { getRefreshToken, extractErrorMessage } from "./api-client";
+import { PARSE_TIMEOUT_MS } from "@/lib/constants";
 import type {
   AdminDashboardStats,
   CreateUserRequest,
@@ -51,6 +52,7 @@ export const extractService = {
     return apiClient
       .post<ParseResponse>("/extract/parse", formData, {
         headers: { "Content-Type": "multipart/form-data" },
+        timeout: PARSE_TIMEOUT_MS,
       })
       .then((r) => r.data);
   },

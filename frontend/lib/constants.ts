@@ -15,6 +15,9 @@ export const STORAGE_KEYS = {
   SIDEBAR_COLLAPSED: "muntq_sidebar_collapsed",
 } as const;
 
+/** Bulk document parse timeout (10 minutes). */
+export const PARSE_TIMEOUT_MS = 10 * 60 * 1000;
+
 export const NAV_ITEMS: {
   href: string;
   label: string;

@@ -5,6 +5,12 @@ import type {
   CreateUserRequest,
   ExcelRequest,
   LoginRequest,
+  NotebookDownloadRequest,
+  NotebookParseResponse,
+  NotebookPreviewResponse,
+  NotebookRemoveRowsRequest,
+  NotebookRemoveRowsResponse,
+  NotebookRow,
   ParseResponse,
   PreviewRequest,
   PreviewResponse,
@@ -84,6 +90,93 @@ export const extractService = {
         | string
         | undefined;
       let filename = data.filename ?? "Specifications_Combined.xlsx";
+      if (disposition) {
+        const match = /filename="?([^"]+)"?/.exec(disposition);
+        if (match?.[1]) filename = match[1];
+      }
+      if (!filename.endsWith(".xlsx")) filename = `${filename}.xlsx`;
+
+      const blob = new Blob([response.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "response" in error &&
+        (error as { response?: { data?: unknown } }).response?.data instanceof
+          Blob
+      ) {
+        const axiosErr = error as {
+          response: { data: Blob; status?: number };
+        };
+        try {
+          const text = await axiosErr.response.data.text();
+          const json = JSON.parse(text) as { detail?: string };
+          throw new Error(json.detail || extractErrorMessage(error));
+        } catch (inner) {
+          if (inner instanceof Error && inner.message) throw inner;
+        }
+      }
+      throw error;
+    }
+  },
+};
+
+export const notebookService = {
+  parse: (files: File[]) => {
+    const formData = new FormData();
+    files.forEach((file) => formData.append("files", file));
+    return apiClient
+      .post<NotebookParseResponse>("/notebooks/parse", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+        timeout: PARSE_TIMEOUT_MS,
+      })
+      .then((r) => r.data);
+  },
+
+  preview: (run_id: string) =>
+    apiClient
+      .get<NotebookPreviewResponse | NotebookRow[]>(
+        `/notebooks/preview/${encodeURIComponent(run_id)}`
+      )
+      .then((r) => {
+        if (Array.isArray(r.data)) {
+          return { run_id, rows: r.data } as NotebookPreviewResponse;
+        }
+        return r.data as NotebookPreviewResponse;
+      }),
+
+  removeRows: (data: NotebookRemoveRowsRequest) =>
+    apiClient
+      .post<NotebookRemoveRowsResponse>("/notebooks/rows/remove", data)
+      .then((r) => r.data),
+
+  downloadExcel: async (data: NotebookDownloadRequest) => {
+    try {
+      const response = await apiClient.post("/notebooks/download", data, {
+        responseType: "blob",
+      });
+
+      const contentType = String(response.headers["content-type"] ?? "");
+      if (contentType.includes("application/json")) {
+        const text = await (response.data as Blob).text();
+        const json = JSON.parse(text) as { detail?: string };
+        throw new Error(json.detail || "Excel download failed");
+      }
+
+      const disposition = response.headers["content-disposition"] as
+        | string
+        | undefined;
+      let filename = data.filename ?? "HardRoll_Combined.xlsx";
       if (disposition) {
         const match = /filename="?([^"]+)"?/.exec(disposition);
         if (match?.[1]) filename = match[1];

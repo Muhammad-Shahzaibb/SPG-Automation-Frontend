@@ -11,6 +11,7 @@ import { Navbar } from "@/components/layout/navbar";
 const pageTitles: Record<string, string> = {
   "/dashboard": "Dashboard",
   "/process": "Extract Documents",
+  "/notebooks": "Excel Notebook Extractor",
   "/users": "User Management",
 };
 

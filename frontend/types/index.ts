@@ -162,3 +162,75 @@ export interface AdminDashboardStats {
 export interface ApiErrorDetail {
   detail: string | Array<{ msg: string; loc?: unknown[] }> | Record<string, unknown>;
 }
+
+// ==================== Excel Notebook Extractor Types ====================
+
+export interface NotebookSpecTarget {
+  TAR?: number | string | null;
+  MIN?: number | string | null;
+  MAX?: number | string | null;
+  [key: string]: unknown;
+}
+
+export interface NotebookRow {
+  row_id: string;
+  file: string;
+  sheet: string;
+  sales_order?: string | null;
+  date?: string | null;
+  shift?: string | null;
+  customer?: string | null;
+  grade_quality_ply?: string | null;
+  combination?: string | null;
+  rewinder?: string | null;
+  item_line?: string | null;
+  measurement_count?: number | null;
+  specs?: Record<string, NotebookSpecTarget>;
+  stats_mean?: Record<string, number | string | null>;
+  stats_min?: Record<string, number | string | null>;
+  stats_max?: Record<string, number | string | null>;
+  stats_std?: Record<string, number | string | null>;
+  [key: string]: unknown;
+}
+
+export interface NotebookError {
+  file: string;
+  message: string;
+}
+
+export interface NotebookParseResponse {
+  run_id: string;
+  files_total: number;
+  files_ok: number;
+  files_failed: number;
+  errors: NotebookError[];
+  rows: NotebookRow[];
+}
+
+export interface NotebookPreviewResponse {
+  run_id?: string;
+  rows: NotebookRow[];
+  files_total?: number;
+  files_ok?: number;
+  files_failed?: number;
+  errors?: NotebookError[];
+  [key: string]: unknown;
+}
+
+export interface NotebookRemoveRowsRequest {
+  run_id: string;
+  row_ids: string[];
+}
+
+export interface NotebookRemoveRowsResponse {
+  run_id: string;
+  removed_count: number;
+  remaining_count: number;
+  remaining_row_ids?: string[];
+}
+
+export interface NotebookDownloadRequest {
+  run_id: string;
+  filename?: string;
+}
+

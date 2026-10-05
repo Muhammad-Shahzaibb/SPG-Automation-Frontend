@@ -5,7 +5,7 @@ export const COMPANY_TAGLINE = "Paper Specification Extractor";
 // export const API_BASE_URL = "http://163.61.91.66:30527/api/v1";  // stage
 // export const API_BASE_URL = "http://localhost:8000/api/v1";  // local
 export const API_BASE_URL = "http://172.160.0.14:8000/api/v1";   // production
-  // process.env.NEXT_PUBLIC_API_URL ?? "http://163.61.91.66:30527/api/v1";
+// process.env.NEXT_PUBLIC_API_URL ?? "http://163.61.91.66:30527/api/v1";
 
 export const STORAGE_KEYS = {
   ACCESS_TOKEN: "muntq_access_token",
@@ -24,12 +24,13 @@ export const NAV_ITEMS: {
   icon: string;
   adminOnly?: boolean;
 }[] = [
-  { href: "/dashboard", label: "Dashboard", icon: "LayoutDashboard" },
-  { href: "/process", label: "Extract Documents", icon: "FileUp" },
-  {
-    href: "/users",
-    label: "User Management",
-    icon: "Users",
-    adminOnly: true,
-  },
-];
+    { href: "/dashboard", label: "Dashboard", icon: "LayoutDashboard" },
+    { href: "/process", label: "Extract Documents", icon: "FileUp" },
+    { href: "/notebooks", label: "Excel Notebooks", icon: "FileSpreadsheet" },
+    {
+      href: "/users",
+      label: "User Management",
+      icon: "Users",
+      adminOnly: true,
+    },
+  ];

@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
   FileUp,
+  FileSpreadsheet,
   Users,
   LogOut,
   PanelLeftClose,
@@ -22,6 +23,7 @@ const SIDEBAR_WIDTH = 260;
 const iconMap = {
   LayoutDashboard,
   FileUp,
+  FileSpreadsheet,
   Users,
 };
 

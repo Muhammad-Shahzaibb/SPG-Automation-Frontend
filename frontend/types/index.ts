@@ -65,6 +65,7 @@ export interface ParseRecord {
   row_id?: string;
   file: string;
   SpecNo?: string;
+  Date?: string;
   Client?: string;
   Quality?: string;
   Grade?: string;
@@ -74,6 +75,8 @@ export interface ParseRecord {
   params: Record<string, ParamValues>;
   [key: string]: unknown;
 }
+
+export type PreviewRow = ParseRecord;
 
 export interface ParseError {
   file: string;

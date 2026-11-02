@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { Fragment } from "react";
 import { Trash2 } from "lucide-react";
@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 const IDENTITY_COLUMNS: { key: keyof ParseRecord | "file"; label: string }[] = [
   { key: "file", label: "File" },
   { key: "SpecNo", label: "Spec No" },
+  { key: "Date", label: "Effective Date" },
   { key: "Client", label: "Client" },
   { key: "Quality", label: "Quality" },
   { key: "Grade", label: "Grade" },
